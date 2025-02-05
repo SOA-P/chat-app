@@ -1,4 +1,5 @@
 // @ts-nocheck
+import cloudinary from "../lib/cloudinary.js";
 import { generateToken } from "../lib/util.js";
 import User from "../models/user.model.js";
 import bcrypt from "bcryptjs";
@@ -95,4 +96,36 @@ export const logout = (req, res) => {
   }
 };
 
-export const updateProfil = async (req, res) => {};
+export const updateProfil = async (req, res) => {
+  try {
+    //on recupere la photo de profil et les info du userid
+    const { profilPic } = req.body;
+    const userId = req.user._id;
+    //on vient verifier si il y a bien une photo de profil
+    if (!profilPic) {
+      res.status(400).json({ message: "Une photo profil est requise" });
+    }
+    // cloudinary n'est pas dans la bdd , on doit donc l'y mettre en metant a jour le profilPicture
+    const uploadResponse = await cloudinary.uploader.upload(profilPic);
+    const updateUser = await user.findByIdAndUpdate(
+      userId,
+      {
+        profilPic: uploadResponse.secure_url,
+      },
+      { new: true }
+    );
+    res.status(200).json(updateUser);
+  } catch (error) {
+    console.log("Erreur de mise à jour du profil", error.message);
+    res.status(500).json({ message: "Erreur du serveur" });
+  }
+};
+
+export const checkAuth = async (req, res) => {
+  try {
+    res.status(200).json(req.user);
+  } catch (error) {
+    console.log("Erreur dans la vérification", error.message);
+    res.status(500).json({ message: "Erreur du Serveur" });
+  }
+};
