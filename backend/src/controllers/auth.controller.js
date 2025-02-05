@@ -7,10 +7,15 @@ export const signup = async (req, res) => {
   const { fullName, password, email } = req.body;
 
   try {
-    if (password.length < 6) {
+    if (!password || !email || !fullName) {
       return res
         .status(400)
-        .json({ message: "Le mot de passe de contenir plus de 6 charactères" });
+        .json({ message: "toute les données sont nécessaire" });
+    }
+    if (password.length < 6) {
+      return res.status(400).json({
+        message: "Le mot de passe doit contenir plus de 6 charactères",
+      });
     }
 
     const user = await User.findOne({ email });
@@ -28,6 +33,7 @@ export const signup = async (req, res) => {
     });
 
     if (newUser) {
+      //generation du token jwt ici !
       generateToken(newUser._id, res);
       await newUser.save();
       res.status(200).json({
@@ -47,10 +53,46 @@ export const signup = async (req, res) => {
   }
 };
 
-export const login = (req, res) => {
-  res.send("login route");
+export const login = async (req, res) => {
+  // il nous faut l'email et le password afin de se connecter , c'est ce que l'on va récuperer ici.
+  const { email, password } = req.body;
+
+  try {
+    const user = await User.findOne({ email });
+
+    if (!user) {
+      return res
+        .status(400)
+        .json({ message: "les identifiants ne sont pas valide" });
+    }
+    // on verifie et on compare que les identifiant sont correct en mode boolean
+    const isPasswordCorrect = await bcrypt.compare(password, user.password);
+    // si il est different de isPasswordCorrect return un erreur 400
+    if (!isPasswordCorrect) {
+      return res
+        .status(400)
+        .json({ message: "les identifiants ne sont pas valide" });
+    } // Sinon retourn moi le token et le userId avec l'objet JSON
+    generateToken(user._id, res);
+    res.status(200).json({
+      _id: user._id,
+      fullName: user.fullName,
+      email: user.email,
+      profilPic: user.profilePic,
+    });
+  } catch (error) {
+    console.log("errur de connexion", error.message);
+    res.status(500).json({ message: "Erreur interne du serveur" });
+  }
 };
 
 export const logout = (req, res) => {
-  res.send("logout route");
+  try {
+    res.cookie("jwt", "", { maxAge: 0 });
+    res.status(200).json({ message: "Deconnexion réussie" });
+  } catch (error) {
+    console.log("Erreur de deconnexion", error.message);
+  }
 };
+
+export const updateProfil = async (req, res) => {};
