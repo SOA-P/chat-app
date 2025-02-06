@@ -107,14 +107,14 @@ export const updateProfil = async (req, res) => {
     }
     // cloudinary n'est pas dans la bdd , on doit donc l'y mettre en metant a jour le profilPicture
     const uploadResponse = await cloudinary.uploader.upload(profilPic);
-    const updateUser = await user.findByIdAndUpdate(
+    const updatedUser = await user.findByIdAndUpdate(
       userId,
       {
         profilPic: uploadResponse.secure_url,
       },
       { new: true }
     );
-    res.status(200).json(updateUser);
+    res.status(200).json(updatedUser);
   } catch (error) {
     console.log("Erreur de mise à jour du profil", error.message);
     res.status(500).json({ message: "Erreur du serveur" });

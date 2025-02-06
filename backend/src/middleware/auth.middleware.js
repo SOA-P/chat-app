@@ -1,27 +1,28 @@
 import jwt from "jsonwebtoken";
 import User from "../models/user.model.js";
 
-export const protectRoute = async (req, res, next) => {
+export const protectedRoute = async (req, res, next) => {
   try {
     const token = req.cookies.jwt;
-    // verifie si il recupère bien le token
     if (!token) {
-      return res
-        .status(401)
-        .json({ message: "Non autorisé - Token non fourni" });
+      res.status(401).json({ message: "Non autorisé - Token non fourni" });
     }
-    // on vient decode et verifier le token dans le cookie
+
     // @ts-ignore
-    const decode = jwt.verify(token, process.env.JWT_SECRET);
-    if (!decode) {
+    // on vient decode et verifier le token dans le cookie
+    const decoded = jwt.verify(token, process.env.JWT_SECRET);
+
+    if (!decoded) {
       res.status(401).json({ message: "Non autorisé - Token invalide" });
     }
-    // on recupere le tout du userId sauf le password
-    const user = await User.findById(decode.userId).select("-password");
+    // on recupere le tout du user sauf le password
+    const user = await User.findById(decoded.userId).select("-password");
     if (!user) {
       res.status(404).json({ message: "l'utilisateur est introuvable" });
     }
+
     req.user = user;
+
     next();
   } catch (error) {
     console.log("Erreur dans la protectRoute middleware", error.message);

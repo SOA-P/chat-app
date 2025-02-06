@@ -1,6 +1,6 @@
 // @ts-nocheck
 import express from "express";
-import { protectRoute } from "../middleware/auth.middleware.js";
+import { protectedRoute } from "../middleware/auth.middleware.js";
 import {
   login,
   logout,
@@ -15,8 +15,8 @@ router.post("/signup", signup);
 router.post("/login", login);
 router.post("/logout", logout);
 
-router.put("/update-profil", protectRoute, updateProfil);
+router.put("/update-profil", protectedRoute, updateProfil);
 
-router.get("/check", protectRoute, checkAuth);
+router.get("/check", protectedRoute, checkAuth);
 
 export default router;
